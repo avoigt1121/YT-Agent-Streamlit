@@ -1,3 +1,14 @@
+---
+title: AI Learning Hub
+emoji: 🤖
+colorFrom: blue
+colorTo: green
+sdk: streamlit
+sdk_version: 1.28.0
+app_file: app.py
+pinned: false
+---
+
 # AI Agents - Streamlit & Hugging Face
 
 A Streamlit application demonstrating AI capabilities using Hugging Face models, containerized with Docker.
