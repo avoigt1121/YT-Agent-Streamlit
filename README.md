@@ -96,14 +96,6 @@ YT-Agent-Streamlit/
 - [Hugging Face Transformers](https://huggingface.co/docs/transformers/)
 - [Docker Documentation](https://docs.docker.com/)
 
-## 🤝 Contributing
-
-This is a learning project! Feel free to:
-- Add new features
-- Improve the documentation
-- Fix bugs
-- Share your modifications
-
 ---
 
 I also used Shaw Talebi's youtube video to help me learn. & his repo for youtube text agent
