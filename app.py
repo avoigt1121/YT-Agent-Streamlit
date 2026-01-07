@@ -1,117 +1,71 @@
 import streamlit as st
 from transformers import pipeline
-import pandas as pd
+import re
+from youtube_transcript_api import YouTubeTranscriptApi
 
-# Set page config
-st.set_page_config(
-    page_title="Learning Streamlit & HuggingFace",
-    page_icon="🤖",
-    layout="wide"
-)
+st.set_page_config(page_title="AI Learning Hub", page_icon="🤖", layout="wide")
 
-# Title and description
-st.title("AI Learning Platform")
-st.markdown("Learning to use AI Models is easy! This app demonstrates Streamlit with Hugging Face models.")
-
-# Sidebar for navigation
-st.sidebar.header("🛠️ Tools")
-selected_tool = st.sidebar.selectbox(
-    "Choose a tool:",
-    ["Text Analysis", "Text Generation", "Question Answering"]
-)
-
-# Cache the model loading to improve performance
-@st.cache_resource
-def load_sentiment_model():
-    """Load sentiment analysis model"""
-    return pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")  # type: ignore
+st.title("AI Learning Hub")
+st.sidebar.header("Tools")
+tool = st.sidebar.selectbox("Pick a tool:", ["Sentiment", "Text Gen", "Q&A", "YouTube"])
 
 @st.cache_resource
-def load_qa_model():
-    """Load question answering model"""
-    return pipeline("question-answering", model="distilbert-base-cased-distilled-squad")
+def load_model(task, model_name):
+    return pipeline(task, model=model_name)
 
-@st.cache_resource
-def load_text_generation_model():
-    """Load text generation model"""
-    return pipeline("text-generation", model="gpt2")
+def get_youtube_transcript(url):
+    video_id = re.search(r'(?:v=|\/)([0-9A-Za-z_-]{11})', url)
+    if not video_id:
+        raise ValueError("Invalid YouTube URL")
+    
+    transcript = YouTubeTranscriptApi.get_transcript(video_id.group(1))
+    return '\n'.join([f"[{int(t['start']//60):02d}:{int(t['start']%60):02d}] {t['text']}" for t in transcript])
 
-# Main content based on selection
-if selected_tool == "Text Analysis":
-    st.header("Text Sentiment Analysis")
-    st.markdown("Analyze the sentiment of your text using a pre-trained Hugging Face model.")
-    
-    # Text input
-    user_input = st.text_area("Enter your text:", placeholder="Type something here...")
-    
-    if st.button("Analyze Sentiment") and user_input:
-        with st.spinner("Analyzing..."):
-            try:
-                # Load model and analyze
-                sentiment_pipeline = load_sentiment_model()
-                result = sentiment_pipeline(user_input)
-                
-                # Display results
-                st.success("Analysis Complete!")
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.metric("Sentiment", result[0]['label'])
-                
-                with col2:
-                    confidence = round(result[0]['score'] * 100, 2)
-                    st.metric("Confidence", f"{confidence}%")
-                    
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
+if tool == "Sentiment":
+    st.header("Sentiment Analysis")
+    text = st.text_area("Enter text:")
+    if st.button("Analyze") and text:
+        model = load_model("sentiment-analysis", "distilbert-base-uncased-finetuned-sst-2-english")
+        result = model(text)[0]
+        st.metric("Sentiment", result['label'])
+        st.metric("Confidence", f"{result['score']:.1%}")
 
-elif selected_tool == "Text Generation":
-    st.header("Text Generation")
-    st.markdown("Generate creative text using GPT-2 model.")
-    
-    prompt = st.text_input("Enter a prompt:", placeholder="Once upon a time...")
-    max_length = st.slider("Max length:", 20, 100, 50)
-    
-    if st.button("Generate Text") and prompt:
-        with st.spinner("Generating..."):
-            try:
-                generator = load_text_generation_model()
-                result = generator(prompt, max_length=max_length, num_return_sequences=1)
-                
-                st.success("Text Generated!")
-                st.write("**Generated Text:**")
-                st.write(result[0]['generated_text'])
-                
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
+elif tool == "Text Gen":
+    st.header("Text Generation") 
+    prompt = st.text_input("Enter prompt:")
+    length = st.slider("Length:", 20, 100, 50)
+    if st.button("Generate") and prompt:
+        model = load_model("text-generation", "gpt2")
+        result = model(prompt, max_length=length, num_return_sequences=1)[0]
+        st.write(result['generated_text'])
 
-elif selected_tool == "Question Answering":
+elif tool == "Q&A":
     st.header("Question Answering")
-    st.markdown("Ask questions about a given context using BERT.")
-    
-    context = st.text_area("Context:", placeholder="Provide some context here...")
-    question = st.text_input("Question:", placeholder="What would you like to know?")
-    
-    if st.button("Get Answer") and context and question:
-        with st.spinner("Finding answer..."):
-            try:
-                qa_pipeline = load_qa_model()
-                result = qa_pipeline(question=question, context=context)
-                
-                st.success("Answer Found!")
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.write("**Answer:**")
-                    st.write(result['answer']) # type: ignore
-                
-                with col2:
-                    confidence = round(result['score'] * 100, 2) # type: ignore
-                    st.metric("Confidence", f"{confidence}%")
-                    
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
+    context = st.text_area("Context:")
+    question = st.text_input("Question:")
+    if st.button("Answer") and context and question:
+        model = load_model("question-answering", "distilbert-base-cased-distilled-squad")
+        result = model(question=question, context=context)
+        st.write(f"**Answer:** {result['answer']}")
+        st.write(f"**Confidence:** {result['score']:.1%}")
 
-# Footer
-st.markdown("---")
-st.markdown("🚀 Built with Streamlit & Hugging Face | Learning Docker & AI")
+elif tool == "YouTube":
+    st.header("🎬 YouTube Analysis")
+    url = st.text_input("YouTube URL:")
+    
+    if st.button("Get Transcript") and url:
+        try:
+            transcript = get_youtube_transcript(url)
+            st.session_state.transcript = transcript
+            st.success("Transcript loaded!")
+            st.text_area("Transcript:", transcript[:500] + "...", height=200)
+        except Exception as e:
+            st.error(f"Error: {e}")
+    
+    if "transcript" in st.session_state:
+        question = st.text_input("Ask about the video:")
+        if st.button("Ask") and question:
+            model = load_model("question-answering", "deepset/roberta-base-squad2")
+            result = model(question=question, context=st.session_state.transcript)
+            st.write(f"**Answer:** {result['answer']}")
+            st.write(f"**Confidence:** {result['score']:.1%}")
