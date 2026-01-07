@@ -1,7 +1,11 @@
 import streamlit as st
 from transformers import pipeline
 import re
+import requests
 from youtube_transcript_api import YouTubeTranscriptApi
+import os 
+
+my_actual_key = os.environ.get('MY_KEY')
 
 st.set_page_config(page_title="AI Learning Hub", page_icon="🤖", layout="wide")
 
@@ -14,12 +18,36 @@ def load_model(task, model_name):
     return pipeline(task, model=model_name)
 
 def get_youtube_transcript(url):
-    video_id = re.search(r'(?:v=|\/)([0-9A-Za-z_-]{11})', url)
-    if not video_id:
-        raise ValueError("Invalid YouTube URL")
+    # First try direct method (free)
+    try:
+        video_id = re.search(r'(?:v=|\/)([0-9A-Za-z_-]{11})', url)
+        if not video_id:
+            raise ValueError("Invalid YouTube URL")
+        
+        transcript = YouTubeTranscriptApi.get_transcript(video_id.group(1))
+        return '\n'.join([f"[{int(t['start']//60):02d}:{int(t['start']%60):02d}] {t['text']}" for t in transcript])
     
-    transcript = YouTubeTranscriptApi.get_transcript(video_id.group(1))
-    return '\n'.join([f"[{int(t['start']//60):02d}:{int(t['start']%60):02d}] {t['text']}" for t in transcript])
+    except Exception as e:
+        # Fallback to ScraperAPI proxy if direct method fails
+        st.info("🔄 Direct method failed, trying proxy...")
+        try:
+            payload = {
+                'api_key': my_actual_key,
+                'url': url, 
+                'max_cost': '1'
+            }
+            response = requests.get('https://api.scraperapi.com/', params=payload)
+            
+            if response.status_code == 200:
+                # Parse the HTML response to extract transcript
+                # Note: This requires additional parsing logic
+                st.warning("Proxy method needs HTML parsing - consider using YouTube API directly")
+                raise Exception("Proxy method not fully implemented for transcript extraction")
+            else:
+                raise Exception(f"Proxy request failed: {response.status_code}")
+                
+        except Exception as proxy_error:
+            raise Exception(f"Both direct and proxy methods failed: {str(e)} | Proxy: {str(proxy_error)}")
 
 if tool == "Sentiment":
     st.header("Sentiment Analysis")
