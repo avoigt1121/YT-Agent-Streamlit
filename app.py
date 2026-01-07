@@ -24,8 +24,9 @@ def get_youtube_transcript(url):
         if not video_id:
             raise ValueError("Invalid YouTube URL")
         
-        transcript = YouTubeTranscriptApi.get_transcript(video_id.group(1))
-        return '\n'.join([f"[{int(t['start']//60):02d}:{int(t['start']%60):02d}] {t['text']}" for t in transcript])
+        api = YouTubeTranscriptApi()
+        transcript = api.fetch(video_id.group(1))
+        return '\n'.join([f"[{int(t.start//60):02d}:{int(t.start%60):02d}] {t.text}" for t in transcript])
     
     except Exception as e:
         # Fallback to ScraperAPI proxy if direct method fails

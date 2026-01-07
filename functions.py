@@ -27,22 +27,23 @@ def fetch_video_transcript(url: str) -> str:
         """Format transcript entries with timestamps"""
         formatted_entries = []
         for entry in transcript:
-            start_time = entry['start']
+            start_time = entry.start
             minutes = int(start_time // 60)
             seconds = int(start_time % 60)
             timestamp = f"[{minutes:02d}:{seconds:02d}]"
-            text = entry['text'].strip()
+            text = entry.text.strip()
             formatted_entries.append(f"{timestamp} {text}")
         return '\n'.join(formatted_entries)
     
     try:
         # First attempt: Get transcript directly
-        transcript = YouTubeTranscriptApi.get_transcript(video_id)  # type: ignore
+        api = YouTubeTranscriptApi()
+        transcript = api.fetch(video_id)  # type: ignore
         return format_transcript(transcript)
     except Exception as e:
         try:
             # Second attempt: Try with different language codes
-            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)  # type: ignore
+            transcript_list = YouTubeTranscriptApi.list(video_id)  # type: ignore
             transcript = transcript_list.find_generated_transcript(['en']).fetch()
             return format_transcript(transcript)
         except Exception:
