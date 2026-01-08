@@ -36,16 +36,10 @@ def fetch_video_transcript(url: str) -> str:
         return '\n'.join(formatted_entries)
     
     try:
-        # First attempt: Get transcript directly
+        # Use fetch method from the API instance
         api = YouTubeTranscriptApi()
-        transcript = api.fetch(video_id)  # type: ignore
+        transcript = api.fetch(video_id)
         return format_transcript(transcript)
     except Exception as e:
-        try:
-            # Second attempt: Try with different language codes
-            transcript_list = YouTubeTranscriptApi.list(video_id)  # type: ignore
-            transcript = transcript_list.find_generated_transcript(['en']).fetch()
-            return format_transcript(transcript)
-        except Exception:
-            raise Exception(f"Error fetching transcript: {str(e)}")
+        raise Exception(f"Error fetching transcript: {str(e)}")
 
