@@ -6,8 +6,6 @@ import json
 import os
 from functions import fetch_video_transcript
 
-my_actual_key = os.environ.get('MY_KEY', '0dfdccdd78216beee8cd360ab9ec6d63')
-
 st.set_page_config(page_title="AI Learning Hub", layout="wide")
 
 # AI Pipeline Loading
