@@ -10,7 +10,7 @@ pinned: false
 
 # AI Agents - Streamlit & Hugging Face
 
-A Streamlit application demonstrating AI capabilities using Hugging Face models, containerized with Docker.
+A Streamlit application demonstrating AI capabilities using Hugging Face models, containerized with Docker. Please note, in this project, I am primarily interested in the data pipeline and software engineering, and I didn't yet work on improving my models.
 
 ## Learning Goals
 
