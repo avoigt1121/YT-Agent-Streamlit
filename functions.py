@@ -73,22 +73,26 @@ def fetch_video_transcript(url):
     video_id = str(extract_video_id(url))
     # First attempt: Try without proxy
     try:
-        scraperapi_key = os.getenv("SCRAPERAPI_KEY")
-        scraperapi_key = '0dfdccdd78216beee8cd360ab9ec6d63'
+        scraperapi_key = os.getenv("SCRAPERAPI_KEY") or '0dfdccdd78216beee8cd360ab9ec6d63'
         if scraperapi_key:
             try:
-                proxy_url = "https://api.scraperapi.com/"
+                # CORRECTED: Use the Proxy Port format (User:Pass@Host:Port)
+                # Note: We use 'http' even for https targets because the proxy handles the tunnel
+                proxy_url = f"http://scraperapi:{scraperapi_key}@proxy-server.scraperapi.com:8001"
+                
                 proxy_config = GenericProxyConfig(
                     http_url=proxy_url,
                     https_url=proxy_url
                 )
+                
                 ytt_api_with_proxy = YouTubeTranscriptApi(proxy_config=proxy_config)
                 transcript = ytt_api_with_proxy.fetch(video_id)
                 return format_transcript(transcript)
             except Exception as e:
+                print(f"Proxy failed: {e}. Falling back to direct connection.")
                 # Second attempt: Try without ScraperAPI proxy
-                print('no proxy')
-                ytt_api = YouTubeTranscriptApi()
+                # Note: Standard library uses static methods, but following your class structure:
+                ytt_api = YouTubeTranscriptApi() 
                 transcript = ytt_api.fetch(video_id)
                 return format_transcript(transcript)
     except Exception as proxy_error:
