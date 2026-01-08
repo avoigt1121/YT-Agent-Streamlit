@@ -1,6 +1,5 @@
 ---
 title: AI Learning Hub
-emoji: 🤖
 colorFrom: blue
 colorTo: green
 sdk: streamlit
@@ -60,7 +59,7 @@ This project uses:
    streamlit run app.py
    ```
 
-5. **Open your browser** and go to `http://localhost:8501`
+5. **Open your browser** and go to `http://localhost:8503`
 
 ### Option 2: Run with Docker
 
@@ -100,12 +99,14 @@ YT-Agent-Streamlit/
    - `distilbert-base-cased-distilled-squad` for question answering
 3. **Caching**: Models are cached for better performance
 4. **Docker**: Containerizes the entire application for easy deployment
+5.**Proxy**: Using ScraperAPI to access Youtube from Huggingface
 
 ## Resources
 
 - [Streamlit Documentation](https://docs.streamlit.io/)
 - [Hugging Face Transformers](https://huggingface.co/docs/transformers/)
 - [Docker Documentation](https://docs.docker.com/)
+- [ScraperAPI Doc] (https://dashboard.scraperapi.com/home)
 
 ---
 
