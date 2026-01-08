@@ -35,11 +35,23 @@ def fetch_video_transcript(url: str) -> str:
             formatted_entries.append(f"{timestamp} {text}")
         return '\n'.join(formatted_entries)
     
+    import requests
+    proxies = {
+        'http': f'http://scraperapi:0dfdccdd78216beee8cd360ab9ec6d63@proxy-server.scraperapi.com:8001',
+        'https': f'http://scraperapi:0dfdccdd78216beee8cd360ab9ec6d63@proxy-server.scraperapi.com:8001'
+    }
+    original_get = requests.get
+    def proxied_get(*args, **kwargs):
+        kwargs['proxies'] = proxies
+        kwargs['timeout'] = 30
+        return original_get(*args, **kwargs)
+    requests.get = proxied_get
     try:
-        # Use fetch method from the API instance
         api = YouTubeTranscriptApi()
         transcript = api.fetch(video_id)
         return format_transcript(transcript)
     except Exception as e:
         raise Exception(f"Error fetching transcript: {str(e)}")
+    finally:
+        requests.get = original_get
 
